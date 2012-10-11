@@ -70,7 +70,9 @@
                                 "autoconf" : [],
                                 "automake" : [],
                                 "git" : [],
-                                "svn" : []
+                                "subversion" : [],
+                                "bzr" : [],
+                                "jenkins" : []
                             }
                         },
                         "sources": {
@@ -82,6 +84,12 @@
                         "commands" : {
                         },
                         "services" : {
+                            "sysvinit": {
+                                "jenkins": {
+                                    "enabled": "true",
+                                    "ensureRunning": "true"
+                                }
+                            }
                         },
                         "users" : {
                         },
@@ -102,6 +110,8 @@
                 "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
                     "#!/bin/bash -x\n",
                     "yum update -y","\n",
+                    "wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo","\n",
+                    "rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key","\n",
                     "/opt/aws/bin/cfn-init ",
                     "     -s ", { "Ref" : "AWS::StackName" },
                     "     -r jenkins ",
@@ -109,9 +119,6 @@
                     "     --secret-key=", { "Fn::GetAtt" : [ "installerAccessKey", "SecretAccessKey" ] },
                     "     --region=", { "Ref": "AWS::Region" },
                     "     -c boot","\n",
-                    "wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo","\n",
-                    "rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key","\n",
-                    "yum install jenkins -y","\n",
                     "\n"
                 ]]}}
             }
@@ -119,13 +126,5 @@
     },
 
     "Outputs": {
-        "URL": {
-            "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "bootstrapInstance", "PublicDnsName" ]}]] },
-            "Description" : "URL for Boot Wizard Instance."
-        },
-        "SSH": {
-            "Value" : { "Fn::Join" : ["", ["ssh ec2-user@", { "Fn::GetAtt" : [ "bootstrapInstance", "PublicDnsName" ]}]] },
-            "Description" : "ssh for bootstrap instance."
-        }
     }
 }
