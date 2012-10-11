@@ -1,0 +1,131 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "aws-jenkins-php",
+
+    "Parameters": {
+        "KeyName": {
+            "Description": "Name of and existing EC2 KeyPair to enable SSH access to the instance",
+            "Type": "String"
+        }
+    },
+
+    "Mappings" : {
+        "amis" : {
+            "us-east-1" : { "32bit" : "ami-6e78da07", "64bit" : "ami-6078da09" },
+            "us-west-1" : { "32bit" : "ami-63735626", "64bit" : "ami-67735622" },
+            "us-west-2" : { "32bit" : "ami-aecc439e", "64bit" : "ami-90cc43a0" },
+            "eu-west-1" : { "32bit" : "ami-89b7b2fd", "64bit" : "ami-8fb7b2fb" },
+            "ap-southeast-1" : { "32bit" : "ami-96f9bfc4", "64bit" : "ami-9af9bfc8" },
+            "ap-northeast-1" : { "32bit" : "ami-923d8e93", "64bit" : "ami-903d8e91" },
+            "sa-east-1" : { "32bit" : "ami-ae3ce2b3", "64bit" : "ami-a83ce2b5" }
+        }
+    },
+
+    "Resources": {
+        "installerUser" : {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path" : "/users/installeruser/",
+                "Policies" : [{
+                    "PolicyName" : "cfn-resources",
+                    "PolicyDocument" : {
+                        "Statement" : [{
+                            "Effect" : "Allow",
+                            "Action" : "cloudformation:DescribeStackResource",
+                            "Resource" : "*"
+                        }]
+                    }
+                }]
+            }
+        },
+        "installerAccessKey" : {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties" : {
+                "Status" : "Active",
+                "UserName" : { "Ref": "installerUser" }
+            }
+        },
+        "SecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "SecurityGroup for jenkins",
+                "SecurityGroupIngress": [
+                    { "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0",  "FromPort": "8080",  "ToPort": "8080" }
+                ]
+            }
+        },
+        "jenkins": {
+            "Type": "AWS::EC2::Instance",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "configSets": {
+                        "boot": [ "bootPackages","bootCommands" ]
+                    },
+                    "bootPackages" : {
+                        "packages" : {
+                            "yum" : {
+                                "gcc" : [],
+                                "gcc-c++" : [],
+                                "make" : [],
+                                "autoconf" : [],
+                                "automake" : [],
+                                "git" : [],
+                                "svn" : []
+                            }
+                        },
+                        "sources": {
+                        },
+                        "files": {
+                        }
+                    },
+                    "bootCommands" : {
+                        "commands" : {
+                        },
+                        "services" : {
+                        },
+                        "users" : {
+                        },
+                        "groups" : {
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "ImageId" : { "Fn::FindInMap" : [ "amis", { "Ref" : "AWS::Region" }, "64bit" ] },
+                "DisableApiTermination" : "false",
+                "InstanceType" : "m1.small",
+                "KeyName" : { "Ref" : "KeyName" },
+                "SecurityGroups" : [ { "Ref": "SecurityGroup" } ],
+                "Tags" : [
+                    { "Key" : "Name", "Value" : "jenkins" }
+                ],
+                "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
+                    "#!/bin/bash -x\n",
+                    "yum update -y","\n",
+                    "/opt/aws/bin/cfn-init ",
+                    "     -s ", { "Ref" : "AWS::StackName" },
+                    "     -r jenkins ",
+                    "     --access-key=", { "Ref" : "installerAccessKey" },
+                    "     --secret-key=", { "Fn::GetAtt" : [ "installerAccessKey", "SecretAccessKey" ] },
+                    "     --region=", { "Ref": "AWS::Region" },
+                    "     -c boot","\n",
+                    "wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo","\n",
+                    "rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key","\n",
+                    "yum install jenkins -y","\n",
+                    "\n"
+                ]]}}
+            }
+        }
+    },
+
+    "Outputs": {
+        "URL": {
+            "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "bootstrapInstance", "PublicDnsName" ]}]] },
+            "Description" : "URL for Boot Wizard Instance."
+        },
+        "SSH": {
+            "Value" : { "Fn::Join" : ["", ["ssh ec2-user@", { "Fn::GetAtt" : [ "bootstrapInstance", "PublicDnsName" ]}]] },
+            "Description" : "ssh for bootstrap instance."
+        }
+    }
+}
