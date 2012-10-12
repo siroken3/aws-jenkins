@@ -156,5 +156,9 @@
     },
 
     "Outputs": {
+        "Jenkins": {
+            "Value" : { "Fn::Join" : ["", [ "http://", { "Fn::GetAtt" : [ "jenkins", "PublicDnsName" ] }, ":8080/" ]] },
+            "Description" : "jenkins dashboard."
+        }
     }
 }
