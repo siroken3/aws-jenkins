@@ -113,7 +113,7 @@
                 "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
                     "#!/bin/bash -x\n",
 
-                    "# yum update -y","\n",
+                    "yum update -y","\n",
                     "wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo","\n",
                     "rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key","\n",
 
@@ -150,7 +150,7 @@
             "DependsOn" : "jenkins",
             "Properties" : {
                 "Handle" : { "Ref" : "waitHandle" },
-                "Timeout" : "600"
+                "Timeout" : "1800"
             }
         }
     },
