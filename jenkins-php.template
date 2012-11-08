@@ -75,6 +75,7 @@
                                 "git" : [],
                                 "subversion" : [],
                                 "bzr" : [],
+                                "ant" : [],
                                 "jenkins" : []
                             }
                         },
