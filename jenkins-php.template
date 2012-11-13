@@ -129,7 +129,7 @@
 
                     "pear upgrade PEAR","\n",
                     "pear config-set auto_discover 1","\n",
-                    "pear install pear.phpqatools.org/phpqatools pear.netpirates.net/phpDox","\n",
+                    "pear install pear.phpqatools.org/phpqatools pear.apigen.org/apigen","\n",
 
                     "cd /tmp","\n",
                     "wget http://localhost:8080/jnlpJars/jenkins-cli.jar ", "\n",
