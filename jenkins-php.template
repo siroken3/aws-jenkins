@@ -73,6 +73,7 @@
                                 "php-devel" : [],
                                 "php-pear" : [],
                                 "php-xml" : [],
+                                "php-mbstring" : [],
                                 "git" : [],
                                 "subversion" : [],
                                 "bzr" : [],
